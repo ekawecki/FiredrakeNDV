@@ -546,9 +546,6 @@ def model(mucon,etacon,sigmacon,ellcon,quad_deg,meshrefs,cstab,deg):
         EOCh1ndofs.append(ln(e_h1[k-1]/(e_h1[k]))/ln(ndof[k-1]/ndof[k]))
         EOCH2ndofs.append(ln(e_H2[k-1]/(e_H2[k]))/ln(ndof[k-1]/ndof[k]))
         EOChndof.append(ln(hm[k-1]/(hm[k]))/ln(ndof[k-1]/ndof[k]))
-        EOCndof25.append(ln(pow(ndof[k-1],-0.25)/(pow(ndof[k],-0.25)))/ln(ndof[k-1]/ndof[k]))
-        EOCndof50.append(ln(pow(ndof[k-1],-0.50)/(pow(ndof[k],-0.50)))/ln(ndof[k-1]/ndof[k]))
-        EOCndof60.append(ln(pow(ndof[k-1],-0.60)/(pow(ndof[k],-0.60)))/ln(ndof[k-1]/ndof[k]))
 
 
     k = 0
