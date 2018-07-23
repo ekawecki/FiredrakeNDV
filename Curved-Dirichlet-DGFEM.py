@@ -391,7 +391,7 @@ def model(mucon,etacon,quad_deg,meshrefs,cstab,deg):
         if inhomogeneous == True:
             L= gamma*(f)*(v.dx(0).dx(0)+v.dx(1).dx(1))*dx(mesh,degree = quad_deg)\
                 +etaouter*g*v*ds(mesh,degree = quad_deg)\
-                    +muouter*inner(as_vector([dg0-n[0]*(dg0*n[0]+dg1*n[1]),dg1-n[1]*(dg0*n[0]+dg1*n[1])]),grad_T(v))*ds(mesh,degree = quad_deg)\
+                    +(muouter+0.5*bdry_indicator)*inner(as_vector([dg0-n[0]*(dg0*n[0]+dg1*n[1]),dg1-n[1]*(dg0*n[0]+dg1*n[1])]),grad_T(v))*ds(mesh,degree = quad_deg)\
                         - 0.5*(inner(grad_T(v.dx(0)*n[0]+v.dx(1)*n[1]),grad_T(g)))*ds(mesh,degree = quad_deg)\
                             - 0.5*((d2g00+d2g11-bdry_indicator*(dg0*n[0]+dg1*n[1])-(d2g00*n[0]*n[0]+2.0*d2g01*n[0]*n[1]+d2g11*n[1]*n[1])))*(v.dx(0)*n[0]+v.dx(1)*n[1])*ds(mesh,degree = quad_deg)
         # defining solution function
