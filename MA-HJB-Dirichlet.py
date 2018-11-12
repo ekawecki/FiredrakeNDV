@@ -623,7 +623,10 @@ for deg in [2]:
     e_L2 = []; e_H1 = []; e_H2 = []; e_h1 = []; EOCL2 = []; EOCH1 = []; EOCH2 = []; EOCh1 = []; newtoncounts = []; newtonerrs = []; hm = []; tt = []; ndof = []; dists = []; ntotlist = [];
     EOCL2.append(0); EOCH1.append(0); EOCH2.append(0); EOCh1.append(0);
     for idx in range(1,refinementsno):
-        newtoncount, newtonerr, newtontimes,e_L21, e_H11, e_H21, e_h11, tt1, hm1, ndofs1, indist = Newton(idx,pow(deg-1,2)/2.0,3.0*pow(deg-1,4)/8.0,8,2.0)
+        if deg = 2:
+            newtoncount, newtonerr, newtontimes,e_L21, e_H11, e_H21, e_h11, tt1, hm1, ndofs1, indist = Newton(idx,pow(deg,2)/2.0,3.0*pow(deg,4)/8.0,8,2.0)
+        else: 
+            newtoncount, newtonerr, newtontimes,e_L21, e_H11, e_H21, e_h11, tt1, hm1, ndofs1, indist = Newton(idx,pow(deg-1,2)/2.0,3.0*pow(deg-1,4)/8.0,8,2.0)
         print(indist)
         ntot = [];
         e_L2.append(e_L21); e_H1.append(e_H11); e_H2.append(e_H21); e_h1.append(e_H21); ndof.append(ndofs1); tt.append(tt1); dists.append(indist); ntot.append(newtoncount[len(newtoncount)-1]); ntotlist.append(newtoncount[len(newtoncount)-1]);
