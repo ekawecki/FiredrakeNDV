@@ -11,13 +11,13 @@ parameters["ghost_mode"] = "shared_facet"
 # Specifying function space polynomial degree, degree of integration rule, choice of benchmark solution and problem (HJB or MA), number of mesh refinements, maximum Newton method iterations, Newton method tolerance, choice of domain, and nature of boundary condition.
 deg = 2
 quad_deg = 20
-prob = 6
-refinementsno = 7
+prob = 0
+refinementsno = 4
 newtonitermax = 30
-newtontol = 1e-12
+newtontol = 1e-11
 cstab = 2.5
-disk = True
-inhomogeneous = False
+disk = False
+inhomogeneous = True
 
 # Defining min, max and sign functions via conditional statements
 def makemax(a,b):
@@ -34,7 +34,7 @@ def Newton(idx,mucon,etacon,quad_deg,cstab):
     if disk == True:
         mesh = Mesh("Meshes/quasiunifrefdisk_%i.msh" % idx)
     else:
-        UnitSquareMesh(2**(idx+1),2**(idx+1))
+        mesh = UnitSquareMesh(2**(idx+1),2**(idx+1))
         bdry_indicator = 0.0
     V = FunctionSpace(mesh, "CG", 2)
 
@@ -87,12 +87,12 @@ def Newton(idx,mucon,etacon,quad_deg,cstab):
         d2udyy = (1.0/50.0)*(Constant(100.0)+1.8*pow(rho-1,2.0)+7.2*pow(y,2.0)*(rho-1))
         gamma = 1.0
         f = 2.0*pow(d2udxx*d2udyy-pow(d2udxy,2.0),0.5)
-        g = u
-        dg0 = du0
-        dg1 = du1
-        d2g00 = d2udxx
-        d2g11 = d2udyy
-        d2g01 = d2udxy
+        g = -u
+        dg0 = -du0
+        dg1 = -du1
+        d2g00 = -d2udxx
+        d2g11 = -d2udyy
+        d2g01 = -d2udxy
         MA = True
         xi = 1.0/100.0
         # Defining optimal controls for the MA-HJB problem
@@ -138,22 +138,29 @@ def Newton(idx,mucon,etacon,quad_deg,cstab):
         MA = True
         xi = 1.0/100.0
     elif prob == 2:
-        alp = 0.05
-        convup = 10.0
-        rho = pow(x,2)+pow(y,2)
-        u = convup*(0.5*(rho-1.0)-alp*0.25*sin(pi*rho))
-        du0 = convup*(x - alp*0.5*pi*x*cos(pi*rho))
-        du1 = convup*(y - alp*0.5*pi*y*cos(pi*rho))
-        d2udxx = convup*(Constant(1.0)-alp*0.5*pi*cos(pi*rho)+alp*pi**2*x**2*sin(pi*rho))
-        d2udxy = convup*(Constant(0.0)+alp*pi**2*x*y*sin(pi*rho))
-        d2udyy = convup*(Constant(1.0)-alp*0.5*pi*cos(pi*rho)+alp*pi**2*y**2*sin(pi*rho))
+#        alp = 0.05
+#        convup = 10.0
+#        rho = pow(x,2)+pow(y,2)
+#        u = convup*(0.5*(rho-1.0)-alp*0.25*sin(pi*rho))
+#        du0 = convup*(x - alp*0.5*pi*x*cos(pi*rho))
+#        du1 = convup*(y - alp*0.5*pi*y*cos(pi*rho))
+#        d2udxx = convup*(Constant(1.0)-alp*0.5*pi*cos(pi*rho)+alp*pi**2*x**2*sin(pi*rho))
+#        d2udxy = convup*(Constant(0.0)+alp*pi**2*x*y*sin(pi*rho))
+#        d2udyy = convup*(Constant(1.0)-alp*0.5*pi*cos(pi*rho)+alp*pi**2*y**2*sin(pi*rho))
+        rho = pow(x,2) + pow(y,2)
+        u = -sqrt(2-rho)+1.0
+        du0 = x/sqrt(2-rho)
+        du1 = y/sqrt(2-rho)
+        d2udxx = -(-2+pow(y,2))/(pow((2-rho),1.5))
+        d2udyy = -(-2+pow(x,2))/(pow((2-rho),1.5))
+        d2udxy = -(-x*y)/(pow(2-rho,1.5))
+        g = u
         f = 2.0*pow(d2udxx*d2udyy-pow(d2udxy,2.0),0.5)
-        g = -u
-        dg0 = -du0
-        dg1 = -du1
-        d2g00 = -d2udxx
-        d2g11 = -d2udyy
-        d2g01 = -d2udxy
+        dg0 = du0
+        dg1 = du1
+        d2g00 = d2udxx
+        d2g11 = d2udyy
+        d2g01 = d2udxy
         # Defining optimal controls for the MA-HJB problem
         def controls(u00,u01,u11):
             hh = f
@@ -302,7 +309,6 @@ def Newton(idx,mucon,etacon,quad_deg,cstab):
             cont = [[c00,c01],[c01,c11]]
             fcont = 0.5*(d2udxx+d2udyy)+zetau*(sqrt(3.0)/4.0)*pow(d2udxx-d2udyy,2)/guuimp+zetau*(sqrt(3.0)/2.0)*2.0*pow(d2udxy,2)/guuimp
             return cont, fcont
-        MA = False
     # tangential gradient function
     def grad_T(u):
         gradT = as_vector([u.dx(0)-n[0]*(u.dx(0)*n[0]+u.dx(1)*n[1]),u.dx(1)-n[1]*(u.dx(0)*n[0]+u.dx(1)*n[1])])
@@ -455,9 +461,12 @@ def Newton(idx,mucon,etacon,quad_deg,cstab):
                
     # defining bilinear form B_{h,*}
     def B_star(u,v):
-        Bstar = B_star_1(u,v)+B_star_2_a(u,v)+B_star_2_b(u,v)-B_star_3_a(u,v)-B_star_3_b(u,v)-B_star_4_a(u,v)-B_star_4_b(u,v)+CurvedExtraTerm(u,v)
+        Bstar = B_star_1(u,v)+B_star_2_a(u,v)+B_star_2_b(u,v)-B_star_3_a(u,v)-B_star_3_b(u,v)-B_star_4_a(u,v)-B_star_4_b(u,v)
         return Bstar
-
+    if disk == True:
+        def B_star(u,v):
+            Bstar = Bstar = B_star_1(u,v)+B_star_2_a(u,v)+B_star_2_b(u,v)-B_star_3_a(u,v)-B_star_3_b(u,v)-B_star_4_a(u,v)-B_star_4_b(u,v)+CurvedExtraTerm(u,v)
+            return Bstar
     # Laplacian inner product
     def Deltainner(u,v):
         delt = (u.dx(0).dx(0)+u.dx(1).dx(1))*(v.dx(0).dx(0)+v.dx(1).dx(1))*dx(mesh, degree = quad_deg)
@@ -528,7 +537,7 @@ def Newton(idx,mucon,etacon,quad_deg,cstab):
 
         # altering the linear form for the inhomogeneous Dirichlet case
         if inhomogeneous == True:
-            L= gamma*(f)*(v.dx(0).dx(0)+v.dx(1).dx(1))*dx(mesh,degree = quad_deg)\
+            L= gamma*(rhsf)*(v.dx(0).dx(0)+v.dx(1).dx(1))*dx(mesh,degree = quad_deg)\
                 +etaouter*g*v*ds(mesh,degree = quad_deg)\
                     +(muouter+0.5*bdry_indicator)*inner(as_vector([dg0-n[0]*(dg0*n[0]+dg1*n[1]),dg1-n[1]*(dg0*n[0]+dg1*n[1])]),grad_T(v))*ds(mesh,degree = quad_deg)\
                         - 0.5*(inner(grad_T(v.dx(0)*n[0]+v.dx(1)*n[1]),grad_T(g)))*ds(mesh,degree = quad_deg)\
@@ -610,10 +619,10 @@ def Newton(idx,mucon,etacon,quad_deg,cstab):
 
     # returning Newton iterations and step errors
     return newtoncount, newtonerr, newtontimes, e_L2, e_H1, e_H2, e_h1, tt, hm, ndofs, initialdist
-for deg in [2,3,4]:
+for deg in [2]:
     e_L2 = []; e_H1 = []; e_H2 = []; e_h1 = []; EOCL2 = []; EOCH1 = []; EOCH2 = []; EOCh1 = []; newtoncounts = []; newtonerrs = []; hm = []; tt = []; ndof = []; dists = []; ntotlist = [];
     EOCL2.append(0); EOCH1.append(0); EOCH2.append(0); EOCh1.append(0);
-    for idx in range(refinementsno):
+    for idx in range(1,refinementsno):
         newtoncount, newtonerr, newtontimes,e_L21, e_H11, e_H21, e_h11, tt1, hm1, ndofs1, indist = Newton(idx,pow(deg-1,2)/2.0,3.0*pow(deg-1,4)/8.0,8,2.0)
         print(indist)
         ntot = [];
